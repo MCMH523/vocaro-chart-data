@@ -24,7 +24,8 @@ ids = json.load(open(ids_p, encoding="utf-8"))
 now_ms = int(time.time() * 1000)
 t = int(latest.get("t", 0))
 age_min = round((now_ms - t) / 60000, 1)
-stale_file = t <= prev_t or age_min > 50          # workflow has not produced a newer reading
+hour_start = now_ms // 3600000 * 3600000
+stale_file = t <= prev_t or t < hour_start         # no reading from this hour yet (the chart cuts on the hour)
 src = {} if stale_file else dict(latest.get("views", {}))
 src_t = t if not stale_file else now_ms
 for k, v in extra.items():
@@ -48,7 +49,7 @@ for i in ids:
 
 dt = datetime.fromtimestamp(src_t / 1000, tz=timezone.utc)
 uh = dt.hour
-report = {"stamp": dt.strftime("%Y%m%dT%H%M"), "t": src_t, "fileAgeMin": age_min, "staleFile": stale_file,
+report = {"stamp": dt.strftime("%Y%m%dT%H%M"), "t": src_t, "fileAgeMin": age_min, "staleFile": stale_file, "fileAt": t,
           "recorded": len(views), "increased": increased, "missing": missing, "rejected": rejected,
           "nothingIncreased": bool(prev) and increased == 0}
 if views and not report["nothingIncreased"]:

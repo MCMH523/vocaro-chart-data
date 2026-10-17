@@ -2,7 +2,7 @@ name: fetch view counts
 
 on:
   schedule:
-    - cron: "1 * * * *"   # every hour at :01 UTC (GitHub may start it a few minutes late)
+    - cron: "1,11 * * * *"   # :01 and a backup at :11 (GitHub may start late or skip a scheduled run)
   workflow_dispatch:
   push:                   # a changed song list is fetched right away
     branches: [main]
