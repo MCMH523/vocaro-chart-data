@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
   push:                   # a changed song list is fetched right away
     branches: [main]
-    paths: [songs.json, scripts/fetch_views.py, .github/workflows/views.yml]
+    paths: [songs.json, tick.txt, scripts/fetch_views.py, .github/workflows/views.yml]   # the hourly Claude task pushes tick.txt to ask for a fresh reading
 
 permissions:
   contents: write
