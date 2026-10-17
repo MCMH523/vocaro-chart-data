@@ -4,6 +4,9 @@ on:
   schedule:
     - cron: "1 * * * *"   # every hour at :01 UTC (GitHub may start it a few minutes late)
   workflow_dispatch:
+  push:                   # a changed song list is fetched right away
+    branches: [main]
+    paths: [songs.json, scripts/fetch_views.py, .github/workflows/views.yml]
 
 permissions:
   contents: write
