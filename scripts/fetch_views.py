@@ -2,7 +2,8 @@
 """Fetch current YouTube view counts for every id in songs.json and write data/latest.json.
 
 Runs hourly in GitHub Actions. Needs the YT_API_KEY secret. Uses only the standard library.
-videos.list costs 1 quota unit per call and takes up to 50 ids, so 1,000 songs cost 20 units an hour.
+videos.list costs 1 quota unit per call (whatever parts are asked for) and takes up to 50 ids, so 1,000 songs
+cost 20 units an hour. The snippet part adds each video's upload time, used for the year filter and anniversaries.
 """
 import json, os, sys, time, urllib.parse, urllib.request
 from datetime import datetime, timezone
@@ -17,14 +18,14 @@ with open(os.path.join(ROOT, "songs.json"), encoding="utf-8") as f:
 ids = list(dict.fromkeys(ids))  # unique, keep order
 
 def call(batch, attempt):
-    q = urllib.parse.urlencode({"part": "statistics", "id": ",".join(batch), "key": KEY,
+    q = urllib.parse.urlencode({"part": "statistics,snippet", "id": ",".join(batch), "key": KEY,
                                 "quotaUser": "gha%d%d" % (int(time.time()), attempt)})
     req = urllib.request.Request("https://www.googleapis.com/youtube/v3/videos?" + q,
                                  headers={"Cache-Control": "no-cache"})
     with urllib.request.urlopen(req, timeout=30) as r:
         return json.load(r)
 
-views, failed = {}, []
+views, published, failed = {}, {}, []
 for i in range(0, len(ids), 50):
     batch = ids[i:i + 50]
     for attempt in range(3):
@@ -34,6 +35,9 @@ for i in range(0, len(ids), 50):
                 n = it.get("statistics", {}).get("viewCount")
                 if n is not None:
                     views[it["id"]] = int(n)
+                p = it.get("snippet", {}).get("publishedAt")
+                if isinstance(p, str) and len(p) <= 32:
+                    published[it["id"]] = p
             break
         except Exception as e:  # network or API error: retry, then give up on this batch
             err = str(e)
@@ -51,6 +55,7 @@ out = {
     "fetchedAt": now.isoformat(timespec="seconds"),
     "count": len(views),
     "views": views,
+    "published": published,
     "missing": [i for i in ids if i not in views and i not in failed],  # private or deleted videos
     "failed": failed,                                                   # batches the API did not answer
 }
