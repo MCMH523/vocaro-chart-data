@@ -14,8 +14,9 @@ if not KEY:
     sys.exit("YT_API_KEY secret is missing")
 
 with open(os.path.join(ROOT, "songs.json"), encoding="utf-8") as f:
-    ids = [i for i in json.load(f).get("ids", []) if isinstance(i, str) and len(i) == 11]
-ids = list(dict.fromkeys(ids))  # unique, keep order
+    _songs = json.load(f)
+ids = [i for i in _songs.get("ids", []) + _songs.get("pending", []) if isinstance(i, str) and len(i) == 11]
+ids = list(dict.fromkeys(ids))  # unique, keep order (pending = newly added songs the Claude task still has to identify)
 
 def call(batch, attempt):
     q = urllib.parse.urlencode({"part": "statistics,snippet", "id": ",".join(batch), "key": KEY,
@@ -25,7 +26,7 @@ def call(batch, attempt):
     with urllib.request.urlopen(req, timeout=30) as r:
         return json.load(r)
 
-views, published, failed = {}, {}, []
+views, published, info, failed = {}, {}, {}, []
 for i in range(0, len(ids), 50):
     batch = ids[i:i + 50]
     for attempt in range(3):
@@ -38,6 +39,8 @@ for i in range(0, len(ids), 50):
                 p = it.get("snippet", {}).get("publishedAt")
                 if isinstance(p, str) and len(p) <= 32:
                     published[it["id"]] = p
+                sn = it.get("snippet", {})
+                info[it["id"]] = {"title": str(sn.get("title", ""))[:300], "channel": str(sn.get("channelTitle", ""))[:120]}
             break
         except Exception as e:  # network or API error: retry, then give up on this batch
             err = str(e)
@@ -56,6 +59,7 @@ out = {
     "count": len(views),
     "views": views,
     "published": published,
+    "info": info,                                                       # title and channel name, so new songs need no other lookup
     "missing": [i for i in ids if i not in views and i not in failed],  # private or deleted videos
     "failed": failed,                                                   # batches the API did not answer
 }
