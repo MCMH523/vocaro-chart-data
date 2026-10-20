@@ -40,7 +40,7 @@ for i in ids:
     s = s.get("data", s) if isinstance(s, dict) else {}
     c = cand[i]
     out.append({"id": i, "title": s.get("title"), "ko": s.get("ko"), "artist": s.get("artist"), "vocal": s.get("vocal"),
-                "length_sec": dur.get(i), "inst": c.get("inst", [])[:10], "ko_candidates": c.get("ko", [])[:10]})
+                "length_sec": dur.get(i), "inst": c.get("inst", [])[:10], "ko_candidates": c.get("ko", [])[:16]})
     if len(out) >= limit:
         break
 print(json.dumps(out, ensure_ascii=False))

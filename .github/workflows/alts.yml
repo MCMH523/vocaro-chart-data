@@ -7,6 +7,10 @@ on:
         description: "Search again for every song"
         type: boolean
         default: false
+      cover:
+        description: "Add the 한국어 커버 search to songs gathered before it existed"
+        type: boolean
+        default: false
   schedule:
     - cron: "37 */6 * * *"
 concurrency:
@@ -21,7 +25,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Search
-        run: python3 scripts/alt_candidates.py --max 130 ${{ inputs.all && '--all' || '' }}
+        run: python3 scripts/alt_candidates.py --max 130 ${{ inputs.all && '--all' || '' }} ${{ inputs.cover && '--add-cover' || '' }}
       - name: Commit
         run: |
           git config user.name "vocaro-bot"

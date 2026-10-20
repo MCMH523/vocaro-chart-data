@@ -3,10 +3,11 @@
 
 Runs in GitHub Actions (the runner can open youtube.com; no API quota is used). For every id in songs.json that
 has no entry in data/alt_candidates.json yet (or every id with --all), it searches YouTube for
-"<title> off vocal", "<title> instrumental" and "<title> 한국어", and keeps the first results of each search
+"<title> off vocal", "<title> instrumental", "<title> 한국어" and "<title> 한국어 커버", and keeps the first results of each search
 (video id, title, channel, views, length). It only gathers candidates: the hourly Claude task decides which
 one, if any, really is the Inst / Korean version, and stores that in the page's database.
-usage: alt_candidates.py [--all] [--max N]
+With --add-cover it only adds the "<title> 한국어 커버" results to entries gathered before that search existed.
+usage: alt_candidates.py [--all] [--add-cover] [--max N]
 """
 import json, os, re, sys, time, urllib.parse, urllib.request
 
@@ -21,6 +22,7 @@ titles = json.load(open(TITLES, encoding="utf-8")) if os.path.exists(TITLES) els
 ids = [i for i in dict.fromkeys(songs.get("ids", []) + songs.get("pending", [])) if re.fullmatch(r"[\w-]{11}", i or "")]
 args = sys.argv[1:]
 redo = "--all" in args
+add_cover = "--add-cover" in args
 limit = int(args[args.index("--max") + 1]) if "--max" in args else 60
 
 def norm(x):
@@ -62,13 +64,29 @@ def search(q):
     walk(data)
     return out[:8]
 
+if add_cover:
+    todo = [i for i in ids if i in have and not have[i].get("kc")][:limit]
+    for vid in todo:
+        e = have[vid]
+        try:
+            seen = {c["vid"] for c in e.get("ko", [])}
+            e["ko"] = e.get("ko", []) + [c for c in search(e["q"] + " 한국어 커버") if c["vid"] not in seen and c["vid"] != vid]
+            e["kc"] = 1
+        except Exception as ex:
+            print("search failed:", vid, ex, file=sys.stderr)
+        time.sleep(1.2)
+        print(vid, e["q"], len(e["ko"]))
+    json.dump(have, open(OUT, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
+    print("cover search added for %d songs" % len(todo))
+    sys.exit(0)
+
 todo = [i for i in ids if redo or i not in have][:limit]
 for vid in todo:
     t = titles.get(vid) or core((info.get(vid) or {}).get("title", ""), (info.get(vid) or {}).get("channel", ""))
     if not t:
         continue
-    entry = {"q": t, "t": int(time.time()), "inst": [], "ko": []}
-    for kind, q in (("inst", t + " off vocal"), ("inst", t + " instrumental"), ("ko", t + " 한국어")):
+    entry = {"q": t, "t": int(time.time()), "inst": [], "ko": [], "kc": 1}
+    for kind, q in (("inst", t + " off vocal"), ("inst", t + " instrumental"), ("ko", t + " 한국어"), ("ko", t + " 한국어 커버")):
         try:
             seen = {c["vid"] for c in entry[kind]}
             entry[kind] += [c for c in search(q) if c["vid"] not in seen and c["vid"] != vid]
