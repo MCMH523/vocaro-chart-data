@@ -1,0 +1,31 @@
+name: alt-candidates
+# Gathers YouTube search results that may be each song's Inst / Korean version (see scripts/alt_candidates.py).
+on:
+  workflow_dispatch:
+    inputs:
+      all:
+        description: "Search again for every song"
+        type: boolean
+        default: false
+  schedule:
+    - cron: "37 */6 * * *"
+concurrency:
+  group: alt-candidates
+  cancel-in-progress: false
+permissions:
+  contents: write
+jobs:
+  search:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Search
+        run: python3 scripts/alt_candidates.py --max 130 ${{ inputs.all && '--all' || '' }}
+      - name: Commit
+        run: |
+          git config user.name "vocaro-bot"
+          git config user.email "vocaro-bot@users.noreply.github.com"
+          git add data/alt_candidates.json
+          git commit -m "alt candidates $(date -u +%Y-%m-%dT%H:%MZ)" || exit 0
+          for i in 1 2 3; do git pull --rebase -q && git push -q && break; sleep 5; done
