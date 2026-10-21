@@ -51,7 +51,8 @@ for i in range(0, len(ids), 50):
                 sec = seconds(it.get("contentDetails", {}).get("duration"))
                 if sec:
                     duration[it["id"]] = sec
-                info[it["id"]] = {"title": str(sn.get("title", ""))[:300], "channel": str(sn.get("channelTitle", ""))[:120]}
+                info[it["id"]] = {"title": str(sn.get("title", ""))[:300], "channel": str(sn.get("channelTitle", ""))[:120],
+                                  "channelId": str(sn.get("channelId", ""))[:40]}
             break
         except Exception as e:  # network or API error: retry, then give up on this batch
             err = str(e)
