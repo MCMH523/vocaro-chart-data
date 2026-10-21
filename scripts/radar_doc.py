@@ -10,7 +10,7 @@ p = os.path.join(repo, "data", "radar.json")
 if not os.path.exists(p):
     print("none"); sys.exit(0)
 new = json.load(open(p, encoding="utf-8"))
-items = [{k: it.get(k) for k in ("vid", "title", "channel", "published", "views", "seconds", "fromSongs")} for it in new.get("items", [])][:40]
+items = [{k: it.get(k) for k in ("vid", "title", "channel", "published", "views", "seconds", "fromSongs", "vsynth")} for it in new.get("items", [])][:40]
 old = None
 if old_path != "-" and os.path.exists(old_path):
     try:

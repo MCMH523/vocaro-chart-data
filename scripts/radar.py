@@ -23,7 +23,9 @@ for vid, v in info.items():
     if c and re.fullmatch(r"UC[\w-]{22}", c):
         chans.setdefault(c, {"name": v.get("channel", ""), "songs": []})["songs"].append(vid)
 NS = {"a": "http://www.w3.org/2005/Atom", "yt": "http://www.youtube.com/xml/schemas/2015", "media": "http://search.yahoo.com/mrss/"}
-SKIP = re.compile(r"(告知|ティザー|teaser|trailer|クロスフェード|xfd|crossfade|生放送|配信|live|ライブ|切り抜き|#shorts|short ver|ショート|予告|お知らせ|anniversary|メイキング|making|試聴|preview|全曲)", re.I)
+SKIP = re.compile(r"(告知|ティザー|teaser|trailer|クロスフェード|xfd|crossfade|生放送|配信|live|ライブ|切り抜き|#shorts|short ver|ショート|予告|お知らせ|anniversary|メイキング|making|試聴|preview|全曲|remix|リミックス|セルフカバー|self[ -]?cover|screen recording|daw session|談義|アカペラ|a cappella|歌ってみた|cover)", re.I)
+# voice synth names, to tell probable vocal-synth originals from other uploads
+VSYNTH = re.compile(r"(初音ミク|ミク|miku|重音テト|テト|teto|可不|kafu|鏡音|リン|レン|巡音|ルカ|luka|kaito|meiko|gumi|\bia\b|flower|v_flower|音街ウナ|ウナ|otomachi|una\b|足立レイ|adachi|歌愛ユキ|ユキ|花隈千冬|千冬|夢ノ結唱|小春六花|知声|ずんだもん|雨衣|ナースロボ|宮舞モカ|moca|loluet|chis-a|saros|rose\b|星界|裏命|ゲキヤク|狐子|AI\s*きりたん|東北|結月ゆかり|ゆかり|紲星あかり|弦巻マキ|ONE\b|CeVIO|Synthesizer V|SynthV|VOCALOID|UTAU|ボカロ|natural|duo|知声|夏色花梨|琴葉)", re.I)
 cut = datetime.now(timezone.utc) - timedelta(days=45)
 found = {}
 for cid, c in chans.items():
@@ -48,7 +50,8 @@ for cid, c in chans.items():
             continue
         if when < cut:
             continue
-        found[vid] = {"vid": vid, "title": title[:200], "channel": c["name"][:100], "channelId": cid, "published": pub[:25], "fromSongs": c["songs"][:3]}
+        found[vid] = {"vid": vid, "title": title[:200], "channel": c["name"][:100], "channelId": cid, "published": pub[:25], "fromSongs": c["songs"][:3],
+                      "vsynth": bool(VSYNTH.search(title))}
     time.sleep(0.3)
 
 ids = list(found)
@@ -72,7 +75,7 @@ if KEY and ids:
             if it.get("snippet", {}).get("liveBroadcastContent") not in (None, "none"):
                 f["seconds"] = -1
 keep = [f for f in found.values() if f.get("seconds") is None or 70 <= f["seconds"] <= 900]
-keep.sort(key=lambda f: f["published"], reverse=True)
+keep.sort(key=lambda f: (f.get("vsynth", False), f["published"]), reverse=True)
 out = {"t": int(time.time() * 1000), "channels": len(chans), "items": keep[:40]}
 json.dump(out, open(os.path.join(ROOT, "data", "radar.json"), "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
 print("radar: %d channels, %d new videos kept of %d" % (len(chans), len(out["items"]), len(found)))
