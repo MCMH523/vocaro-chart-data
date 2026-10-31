@@ -1,12 +1,6 @@
 {
-"t": 1793487149,
+"t": 1793487396,
 "songs": [
-{
-"id": "3iUgKH8c7p4",
-"title": "いますぐ輪廻",
-"ko": "지금 바로 윤회",
-"artist": "なきそ"
-},
 {
 "id": "UsjsYMo3O1Q",
 "title": "ブレインロット",
@@ -14,10 +8,16 @@
 "artist": "東京真中"
 },
 {
-"id": "YcxhmHEykPg",
-"title": "처형박수 (Execution Clap)",
-"ko": "처형박수",
-"artist": "TRAP CHICK"
+"id": "0iVlSNpq8i8",
+"title": "BIRDBRAIN",
+"ko": "버드브레인",
+"artist": "Jamie Paige"
+},
+{
+"id": "Dz5rALpx06M",
+"title": "バゥムクゥヘン・エンドロゥル (Baumkuchen End Credits)",
+"ko": "바움쿠헨 엔드롤",
+"artist": "雨良"
 }
 ]
 }
