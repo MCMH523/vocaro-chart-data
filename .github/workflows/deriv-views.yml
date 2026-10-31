@@ -1,0 +1,29 @@
+name: deriv-views
+# Reads the view counts of every 2차창작 link in deriv/ids.json once a day (see scripts/deriv_views.py).
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: [deriv/ids.json, scripts/deriv_views.py, .github/workflows/deriv-views.yml]
+concurrency:
+  group: deriv-views
+  cancel-in-progress: false
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch
+        env:
+          YT_API_KEY: ${{ secrets.YT_API_KEY }}
+        run: python3 scripts/deriv_views.py
+      - name: Commit
+        run: |
+          git config user.name "vocaro-bot"
+          git config user.email "vocaro-bot@users.noreply.github.com"
+          git add data/deriv_views.json
+          git commit -m "2차창작 views $(date -u +%Y-%m-%dT%H:%MZ)" || exit 0
+          for i in 1 2 3 4 5; do git pull --rebase -q && git push -q && break; sleep 5; done
