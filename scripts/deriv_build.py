@@ -3,7 +3,7 @@
 
 usage: deriv_build.py RUN_DIR PICKS_JSON VERSIONS_JSON T_MS
   PICKS_JSON    : {song id: {"cover": [i, ...], "ip": [[i, "IP name"], ...], "note": "짧은 한국어 메모"}}
-                  (i = candidate numbers printed by deriv_pending.py; [] when nothing fits)
+                  (i = numbers from the song's candidate list printed by deriv_pending.py; [] when nothing fits)
   VERSIONS_JSON : {song id: version} of the existing derivs documents (omit songs that have none)
 Each list keeps the hand-added entries first, then the picks, at most 5 per kind. Writes RUN_DIR/out/<id>.json and
 prints a JSON array of "set" writes (file_path form, if_version where the document exists).
@@ -25,15 +25,16 @@ for sid, p in picks.items():
     d = derivs.get(sid, {})
     doc = {"hide": [h for h in (d.get("hide") or []) if isinstance(h, str)][:200], "searchedAt": t_ms, "at": t_ms,
            "searchNote": str(p.get("note") or "")[:120]}
+    used = set()   # a video goes in one list only
     for kind in ("cover", "ip"):
         lst = [e for e in entries(d, kind) if e.get("manual")]
         have = {e["vid"] for e in lst}
         for item in p.get(kind) or []:
             i, ipname = (item[0], item[1]) if isinstance(item, list) else (item, "")
-            if not isinstance(i, int) or not (0 <= i < len(cands[sid][kind])):
+            if not isinstance(i, int) or not (0 <= i < len(cands[sid])):
                 continue
-            c = cands[sid][kind][i]
-            if c["vid"] in have:
+            c = cands[sid][i]
+            if c["vid"] in have or c["vid"] in used:
                 continue
             have.add(c["vid"])
             e = {"vid": c["vid"], "title": c.get("title", "")[:200], "channel": c.get("channel", "")[:80], "v": int(c.get("views") or 0)}
@@ -41,6 +42,7 @@ for sid, p in picks.items():
                 e["ip"] = str(ipname or c.get("kw") or "")[:40]
             lst.append(e)
         doc[kind] = lst[:5]
+        used |= {e["vid"] for e in doc[kind]}
     path = os.path.abspath(os.path.join(run, "out", sid + ".json"))
     json.dump(doc, open(path, "w", encoding="utf-8"), ensure_ascii=False)
     w = {"op": "set", "collection": "derivs", "doc_id": sid, "file_path": path}

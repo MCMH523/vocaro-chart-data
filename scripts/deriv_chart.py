@@ -15,6 +15,8 @@ from deriv_lib import docs, entries, vid_ok
 
 repo, run, prev_p, out_p, day = sys.argv[1:6]
 derivs, songs = docs(os.path.join(run, "derivs")), docs(os.path.join(run, "songs"))
+for k, v in docs(os.path.join(run, "seed")).items():   # documents deriv_ids.py created in this run
+    derivs.setdefault(k, v)
 dv = json.load(open(os.path.join(repo, "data", "deriv_views.json"), encoding="utf-8"))
 views, info = dv.get("views") or {}, dv.get("info") or {}
 prev = None
