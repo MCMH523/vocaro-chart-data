@@ -6,7 +6,7 @@ usage: deriv_chart.py REPO_DIR RUN_DIR PREV OUT DAY
   PREV : the previous dchart documents saved by ArtifactData query out_dir (a directory), a file, or "-"
   OUT  : where to write the new dchart document; DAY = YYYYMMDD (Korea time)
 Every link's gain is (today's views - the previous reading's views), scaled to 24 hours when the readings are not a
-day apart, never below 0; a link without a previous reading (added since) has no gain yet. Charts, one row per song:
+day apart (a link's own reading time is in the previous document's "vt" when it was added later), never below 0; a link without a previous reading (added since) has no gain yet. Charts, one row per song:
   inst  : the song's Inst link (alts/<id>.inst)
   cover : the song's Korean cover with the largest gain
   ip    : the sum of the song's three largest Korean-IP fan work gains
@@ -32,11 +32,12 @@ if prev_p != "-":
 cands = [x for x in cands if isinstance(x, dict) and x.get("day") != day and x.get("views") and x.get("t")]
 prev = max(cands, key=lambda x: x["t"]) if cands else None
 base, tprev = (prev or {}).get("views") or {}, (prev or {}).get("t")
-scale = 24 * 3600000 / (t - tprev) if prev and t and t > tprev else None
+vt = (prev or {}).get("vt") or {}   # reading times of links added to a reading later (default: the reading's t)
 gains = {}
 for vid, n in views.items():
-    if scale and vid in base:
-        gains[vid] = max(0, round((n - base[vid]) * scale))
+    tp = vt.get(vid, tprev)
+    if vid in base and t and tp and t > tp:
+        gains[vid] = max(0, round((n - base[vid]) * 24 * 3600000 / (t - tp)))
 pranks = {k: {r["id"]: r["rank"] for r in rows} for k, rows in ((prev or {}).get("charts") or {}).items()}
 charts, gone, meta = {"inst": [], "cover": [], "ip": []}, set(), {}
 for sid in sorted(songs):
