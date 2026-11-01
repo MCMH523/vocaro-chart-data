@@ -5,7 +5,7 @@ usage: deriv_build.py RUN_DIR PICKS_JSON VERSIONS_JSON T_MS
   PICKS_JSON    : {song id: {"cover": [i, ...], "ip": [[i, "IP name"], ...], "note": "짧은 한국어 메모"}}
                   (i = numbers from the song's candidate list printed by deriv_pending.py; [] when nothing fits)
   VERSIONS_JSON : {song id: version} of the existing derivs documents (omit songs that have none)
-Each list keeps the hand-added entries first, then the picks, at most 5 per kind. Writes RUN_DIR/out/<id>.json and
+Each list keeps the hand-added and IP-sweep entries first, then the picks, at most 5 per kind. Writes RUN_DIR/out/<id>.json and
 prints a JSON array of "set" writes (file_path form, if_version where the document exists).
 """
 import json, os, sys
@@ -23,11 +23,12 @@ for sid, p in picks.items():
     if sid not in cands:
         continue
     d = derivs.get(sid, {})
-    doc = {"hide": [h for h in (d.get("hide") or []) if isinstance(h, str)][:200], "searchedAt": t_ms, "at": t_ms,
-           "searchNote": str(p.get("note") or "")[:120]}
+    doc = dict(d)   # keep every other field (ipSwept, …)
+    doc.update({"hide": [h for h in (d.get("hide") or []) if isinstance(h, str)][:200], "searchedAt": t_ms, "at": t_ms,
+                "searchNote": str(p.get("note") or "")[:120]})
     used = set()   # a video goes in one list only
     for kind in ("cover", "ip"):
-        lst = [e for e in entries(d, kind) if e.get("manual")]
+        lst = [e for e in entries(d, kind) if e.get("manual") or e.get("sweep")]
         have = {e["vid"] for e in lst}
         for item in p.get(kind) or []:
             i, ipname = (item[0], item[1]) if isinstance(item, list) else (item, "")

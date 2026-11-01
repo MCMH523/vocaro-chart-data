@@ -29,14 +29,14 @@ for sid in ids:
         out.append({"id": sid, "error": "no search results in data/deriv_candidates.json"})
         continue
     hide = set(d.get("hide") or [])
-    keep = {k: [e for e in entries(d, k) if e.get("manual")] for k in ("cover", "ip")}
+    keep = {k: [e for e in entries(d, k) if e.get("manual") or e.get("sweep")] for k in ("cover", "ip")}
     taken = {e["vid"] for k in keep for e in keep[k]} | hide | chart_ids
     own = norm((info.get(sid) or {}).get("channel"))   # uploads by the song's own channel are official, not fan works
     names = [n for n in (norm(s.get("ko")), norm(s.get("title"))) if len(n) >= 2]
     seen, lst = set(), []
     for kind in ("cover", "ip"):
         for e in entries(d, kind):
-            if not e.get("manual") and e["vid"] not in taken and e["vid"] not in seen:
+            if not e.get("manual") and not e.get("sweep") and e["vid"] not in taken and e["vid"] not in seen:
                 seen.add(e["vid"])
                 lst.append({"vid": e["vid"], "title": e.get("title", ""), "channel": e.get("channel", ""),
                             "views": dv.get(e["vid"], e.get("v") or 0), "length": "", "now": kind, "kw": e.get("ip", "")})

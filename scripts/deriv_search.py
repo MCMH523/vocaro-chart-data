@@ -9,6 +9,10 @@ deriv/req.json = {"t": epoch seconds, "songs": [{"id", "title", "ko", "artist"}]
 and keeps every video result (id, title, channel, view count, length, query). It only gathers candidates; the
 Claude task decides which ones really are a Korean cover / a Korean-IP fan work of that very song.
 Results go to data/deriv_candidates.json as {song id: {"req": t, "at": epoch, "cover": [...], "ip": [...]}}.
+
+IP sweep: when deriv/req.json also has "ip": {"name", "kws": [keywords]}, it searches only that IP for every song in
+the request ("<ko> <kw>" and "<title> <kw>" for up to three keywords) and writes data/deriv_ipcands.json as
+{song id: {"req": t, "at": epoch, "ip": name, "c": [...]}} instead.
 """
 import json, os, re, sys, time, urllib.parse, urllib.request
 
@@ -50,6 +54,32 @@ def search(q, views=False):
     return out[:12]
 
 req = json.load(open(REQ, encoding="utf-8"))
+sweep = req.get("ip") if isinstance(req.get("ip"), dict) else None
+if sweep:
+    OUTI = os.path.join(ROOT, "data", "deriv_ipcands.json")
+    have = json.load(open(OUTI, encoding="utf-8")) if os.path.exists(OUTI) else {}
+    kws = [k for k in dict.fromkeys(str(k).strip() for k in (sweep.get("kws") or [sweep.get("name", "")])) if k][:3]
+    for s in req.get("songs", [])[:25]:
+        sid = s.get("id", "")
+        if not re.fullmatch(r"[\w-]{11}", sid):
+            continue
+        names = [n for n in dict.fromkeys([(s.get("ko") or "").strip(), (s.get("title") or "").strip()]) if n]
+        entry, seen, errors = {"req": req.get("t"), "at": int(time.time()), "ip": sweep.get("name", ""), "c": []}, {sid}, 0
+        for n in names:
+            for kw in kws:
+                try:
+                    for c in search(n + " " + kw):
+                        if c["vid"] not in seen:
+                            seen.add(c["vid"]); c["kw"] = kw; entry["c"].append(c)
+                except Exception as e:
+                    errors += 1
+                    print("search failed:", sid, n, kw, e, file=sys.stderr)
+                time.sleep(1.3)
+        entry["errors"] = errors
+        have[sid] = entry
+        print(sid, names, len(entry["c"]), "errors", errors)
+    json.dump(have, open(OUTI, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
+    sys.exit(0)
 have = json.load(open(OUT, encoding="utf-8")) if os.path.exists(OUT) else {}
 for s in req.get("songs", [])[:12]:
     sid = s.get("id", "")
