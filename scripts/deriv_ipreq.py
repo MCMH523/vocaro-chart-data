@@ -3,7 +3,8 @@
 
 usage: deriv_ipreq.py REPO_DIR RUN_DIR [MAX]
   RUN_DIR/dipreq, RUN_DIR/derivs, RUN_DIR/songs : collections saved by ArtifactData list out_dir
-A sweep request dipreq/<key> = {"ip": name, "kws": [search keywords], "at": ms} covers every live song; a song is done
+A sweep request dipreq/<key> = {"ip": name, "kws": [search keywords], "at": ms, "paused"?} covers every live song (a paused
+one is skipped); a song is done
 for it once derivs/<song>.ipSwept[name] is not older than "at". Takes the oldest sweep that still has songs to do,
 writes REPO_DIR/deriv/req.json for at most MAX (default 20) of them and prints
 {"ip": name, "kws": [...], "ids": [...], "left_after": n, "total": n, "open_sweeps": n} ({"ids": []} when none).
@@ -19,7 +20,7 @@ live = sorted(k for k, s in songs.items() if vid_ok(k) and s.get("status") not i
 sweeps = []
 for key, r in reqs.items():
     name, at = str(r.get("ip") or "").strip(), r.get("at") or 0
-    if not name:
+    if not name or r.get("paused"):
         continue
     todo = [k for k in live if ((derivs.get(k) or {}).get("ipSwept") or {}).get(name, 0) < at]
     if todo:
