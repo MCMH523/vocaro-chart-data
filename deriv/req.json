@@ -1,11 +1,25 @@
 {
-"t": 1793487407,
+"t": 1793507060,
+"ip": {
+"name": "블루 아카이브",
+"kws": [
+"블루아카이브",
+"ブルアカ",
+"Blue Archive"
+]
+},
 "songs": [
 {
-"id": "UsjsYMo3O1Q",
-"title": "ブレインロット",
-"ko": "브레인 롯",
-"artist": "東京真中"
+"id": "-H2PCK7DJsQ",
+"title": "サラマンダー",
+"ko": "샐러맨더",
+"artist": "DECO*27"
+},
+{
+"id": "-S_WxH8RmkA",
+"title": "テイカー｛低下｝",
+"ko": "",
+"artist": "原口沙輔"
 },
 {
 "id": "0iVlSNpq8i8",
@@ -14,10 +28,106 @@
 "artist": "Jamie Paige"
 },
 {
-"id": "Dz5rALpx06M",
-"title": "バゥムクゥヘン・エンドロゥル (Baumkuchen End Credits)",
-"ko": "바움쿠헨 엔드롤",
-"artist": "雨良"
+"id": "19y8YTbvri8",
+"title": "メズマライザー",
+"ko": "메스머라이저",
+"artist": "サツキ"
+},
+{
+"id": "1Swg-aBO9eY",
+"title": "混沌ブギ",
+"ko": "혼돈부기",
+"artist": "jon-YAKITORY"
+},
+{
+"id": "2b1IexhKPz4",
+"title": "きゅうくらりん",
+"ko": "두근 어질",
+"artist": "いよわ"
+},
+{
+"id": "3em-J9yYPAo",
+"title": "1000年生きてる",
+"ko": "1000년 살고 있어",
+"artist": "いよわ"
+},
+{
+"id": "3iUgKH8c7p4",
+"title": "いますぐ輪廻",
+"ko": "지금 바로 윤회",
+"artist": "なきそ"
+},
+{
+"id": "3sEptl-psU0",
+"title": "ロウワー",
+"ko": "로워",
+"artist": "ぬゆり"
+},
+{
+"id": "5LbpDCPKen0",
+"title": "SOSORRY!",
+"ko": "미안해 !",
+"artist": "ePiaeon"
+},
+{
+"id": "5XehRIb81k8",
+"title": "ド屑",
+"ko": "개쓰레기",
+"artist": "なきそ"
+},
+{
+"id": "5l8VZEyNRH8",
+"title": "LEMON MELON COOKIE",
+"ko": "레몬멜론쿠키",
+"artist": "TAK"
+},
+{
+"id": "6ObvFPLk8eI",
+"title": "ワンダー",
+"ko": "원더",
+"artist": "r-906"
+},
+{
+"id": "6_toWwEFXyA",
+"title": "ダミーロマンス",
+"ko": "더미 로맨스",
+"artist": "DECO*27"
+},
+{
+"id": "786OXxbw2aM",
+"title": "展示中毒 (Displayholic)",
+"ko": "전시중독",
+"artist": "ABM (AnythingBecomeMoe)"
+},
+{
+"id": "7O9PFfabVkk",
+"title": "デビットビット",
+"ko": "데빗 비트",
+"artist": "アボガド6"
+},
+{
+"id": "7qUq1yOjoPM",
+"title": "もしもし",
+"ko": "만약에 만약에",
+"artist": "なきそ"
+},
+{
+"id": "7zwCIz-Ohn4",
+"title": "乙女解剖",
+"ko": "소녀 해부",
+"artist": "DECO*27"
+},
+{
+"id": "8Cm-7oCq9HA",
+"title": "PPPP",
+"ko": "PPPP",
+"artist": "TAK"
+},
+{
+"id": "8E8aWeY-pAc",
+"title": "お返事まだカナ？おじさん構文！",
+"ko": "답장 아직일까? 아저씨 구문",
+"artist": "吉本おじさん"
 }
 ]
 }
