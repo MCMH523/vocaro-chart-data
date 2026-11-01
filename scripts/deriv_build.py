@@ -5,7 +5,7 @@ usage: deriv_build.py RUN_DIR PICKS_JSON VERSIONS_JSON T_MS
   PICKS_JSON    : {song id: {"cover": [i, ...], "ip": [[i, "IP name"], ...], "note": "짧은 한국어 메모"}}
                   (i = numbers from the song's candidate list printed by deriv_pending.py; [] when nothing fits)
   VERSIONS_JSON : {song id: version} of the existing derivs documents (omit songs that have none)
-Each list keeps the hand-added and IP-sweep entries first, then the picks, at most 5 per kind. Writes RUN_DIR/out/<id>.json and
+Each list keeps the hand-added and IP-sweep entries first, then the picks (no limit on how many). Writes RUN_DIR/out/<id>.json and
 prints a JSON array of "set" writes (file_path form, if_version where the document exists).
 """
 import json, os, sys
@@ -42,7 +42,7 @@ for sid, p in picks.items():
             if kind == "ip":
                 e["ip"] = str(ipname or c.get("kw") or "")[:40]
             lst.append(e)
-        doc[kind] = lst[:5]
+        doc[kind] = lst[:60]   # no real limit; a guard against runaway lists
         used |= {e["vid"] for e in doc[kind]}
     path = os.path.abspath(os.path.join(run, "out", sid + ".json"))
     json.dump(doc, open(path, "w", encoding="utf-8"), ensure_ascii=False)

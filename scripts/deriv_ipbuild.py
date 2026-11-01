@@ -5,7 +5,7 @@ usage: deriv_ipbuild.py RUN_DIR PICKS_JSON VERSIONS_JSON T_MS IP_NAME IDS
   PICKS_JSON    : {song id: [i, ...]} (numbers from deriv_ippending.py; songs without picks may be left out)
   VERSIONS_JSON : {song id: version} of the existing derivs documents among IDS
   IDS           : every song id of this batch (all of them are marked done: ipSwept[IP_NAME] = T_MS)
-The song's IP list keeps hand-added entries first, then every other entry and the new picks by views, at most 5.
+The song's IP list keeps hand-added entries first, then every other entry and the new picks by views (no limit).
 Writes RUN_DIR/ipout/<id>.json and prints a JSON array of "set" writes (file_path form, if_version where it exists).
 """
 import json, os, sys
@@ -39,7 +39,7 @@ for sid in ids:
                     "v": int(c.get("views") or 0), "ip": ipname[:40], "sweep": ipname[:40]})
     manual = [e for e in cur if e.get("manual")]
     rest = sorted([e for e in cur if not e.get("manual")] + new, key=lambda e: -(e.get("v") or 0))
-    doc["ip"] = (manual + rest)[:5]
+    doc["ip"] = (manual + rest)[:60]
     added += len([e for e in new if e in doc["ip"]])
     sw = dict(doc.get("ipSwept") or {})
     sw[ipname] = t_ms

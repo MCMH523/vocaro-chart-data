@@ -2,7 +2,7 @@
 """IP sweep: show each song's search results for the IP so the Claude task can judge them.
 
 usage: deriv_ippending.py REPO_DIR RUN_DIR IDS IP_NAME
-Only results whose title contains the song's name are shown (at most 10 per song): title, channel, views on the search
+Only results whose title contains the song's name are shown (at most 15 per song): title, channel, views on the search
 page, length and "kw_in_title" (the title or channel contains one of the IP's search keywords or its name).
 Saves RUN_DIR/ipcands.json = {song id: [candidates]} and prints, per song, its current IP fan works and the numbered
 candidates (an empty list when nothing came up).
@@ -37,7 +37,7 @@ for sid in ids:
         lst.append(x)
         taken.add(x["vid"])
     lst.sort(key=lambda x: (not x["kw_in_title"], -(x.get("views") or 0)))
-    lst = lst[:10]
+    lst = lst[:15]
     saved[sid] = lst
     out.append({"id": sid, "ko": s.get("ko"), "title": s.get("title"), "artist": s.get("artist"),
                 "now_ip": [{"title": e.get("title"), "ip": e.get("ip")} for e in entries(d, "ip")],

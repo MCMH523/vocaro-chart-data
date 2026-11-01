@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
-"""Daily 2차창작 run, part 1: list every link to read, and seed documents for songs that only have a Korean
-version link from the hourly task (alts/<id>.ko) and no derivs document yet.
+"""Daily 2차창작 run, part 1: list every link to read (each live song's Korean covers and Korean-IP fan works, and its
+Inst link from alts/<id>.inst), and seed documents for songs that only have a Korean version link from the hourly
+task (alts/<id>.ko) and no derivs document yet.
 
 usage: deriv_ids.py REPO_DIR RUN_DIR T_MS
   RUN_DIR/derivs, RUN_DIR/alts, RUN_DIR/songs : collections saved by ArtifactData list out_dir
@@ -29,9 +30,12 @@ for sid in sorted(live):
             path = os.path.abspath(os.path.join(run, "seed", sid + ".json"))
             json.dump(d, open(path, "w", encoding="utf-8"), ensure_ascii=False)
             seed.append({"op": "set", "collection": "derivs", "doc_id": sid, "file_path": path})
+    inst = (alts.get(sid) or {}).get("inst")
+    if isinstance(inst, dict) and vid_ok(inst.get("vid")) and inst["vid"] != sid:
+        ids.append(inst["vid"])
     if not d:
         continue
-    vs = [e["vid"] for k in ("cover", "ip") for e in entries(d, k)][:10]
+    vs = [e["vid"] for k in ("cover", "ip") for e in entries(d, k)]
     if vs:
         n += 1
     ids += vs
