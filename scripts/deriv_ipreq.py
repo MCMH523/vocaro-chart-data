@@ -8,7 +8,8 @@ song, or only the live songs in "ids" when the viewer chose songs (at most 20); 
 for it once derivs/<song>.ipSwept[name] is not older than "at". Takes the sweep with chosen songs first (they finish
 in one run), else the oldest sweep that still has songs to do,
 writes REPO_DIR/deriv/req.json for at most MAX (default 20) of them and prints
-{"ip": name, "kws": [...], "ids": [...], "left_after": n, "total": n, "open_sweeps": n} ({"ids": []} when none).
+{"ip": name, "kws": [...], "ids": [...], "left_after": n (songs left in every open sweep after this batch, so the task
+keeps chaining), "left_this": n, "total": n, "chosen": bool, "open_sweeps": n} ({"ids": []} when none).
 """
 import json, os, sys, time
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -40,4 +41,4 @@ os.makedirs(os.path.join(repo, "deriv"), exist_ok=True)
 json.dump({"t": int(time.time()), "ip": {"name": name, "kws": kws},
            "songs": [{"id": k, "title": songs[k].get("title") or "", "ko": songs[k].get("ko") or "", "artist": songs[k].get("artist") or ""} for k in pick]},
           open(os.path.join(repo, "deriv", "req.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=0)
-print(json.dumps({"ip": name, "kws": kws, "ids": pick, "left_after": len(todo) - len(pick), "total": total, "chosen": sweeps[0][0] == 0, "open_sweeps": len(sweeps)}, ensure_ascii=False))
+print(json.dumps({"ip": name, "kws": kws, "ids": pick, "left_after": len(todo) - len(pick) + sum(len(x[4]) for x in sweeps[1:]), "left_this": len(todo) - len(pick), "total": total, "chosen": sweeps[0][0] == 0, "open_sweeps": len(sweeps)}, ensure_ascii=False))
