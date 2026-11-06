@@ -6,6 +6,8 @@ usage: build_snapshot.py LATEST_JSON PREV_SNAPSHOT_JSON ACTIVE_IDS_JSON OUT_JSON
   ACTIVE_IDS_JSON:    a JSON array of the ids that should be recorded
   EXTRA_JSON:         optional {id: count} fetched another way for ids latest.json lacks
 Prints a JSON report; writes OUT_JSON only when there is something to record.
+A reading whose total growth per hour is under 10% of the previous snapshot's "rate" is reported
+as "stalled" (YouTube froze its counts) and not written.
 """
 import json, sys, time
 from datetime import datetime, timezone
@@ -15,10 +17,12 @@ extra = json.load(open(sys.argv[5])) if len(sys.argv) > 5 else {}
 latest = json.load(open(latest_p, encoding="utf-8"))
 prev = {}
 prev_t = 0
+prev_rate = None
 if prev_p != "-":
     d = json.load(open(prev_p, encoding="utf-8"))
     d = d.get("data", d)
     prev, prev_t = d.get("views", {}) or {}, d.get("t", 0) or 0
+    prev_rate = d.get("rate")
 ids = json.load(open(ids_p, encoding="utf-8"))
 
 now_ms = int(time.time() * 1000)
@@ -47,14 +51,27 @@ for i in ids:
         increased += 1
     views[i] = int(n)
 
+# Total growth per hour over the songs both readings have. YouTube sometimes freezes the public
+# counts of every video for a few hours; such a reading would show almost no growth for all songs,
+# so it is not recorded when it falls below STALL_RATIO of the previous snapshot's rate.
+STALL_RATIO = 0.1
+hours = (src_t - prev_t) / 3600000 if prev_t else 0
+common = [i for i in views if i in prev]
+growth = sum(views[i] - prev[i] for i in common)
+rate = int(growth / hours) if hours > 0.25 and len(common) * 2 >= len(prev) else None
+stalled = bool(rate is not None and prev_rate and rate < prev_rate * STALL_RATIO)
+
 dt = datetime.fromtimestamp(src_t / 1000, tz=timezone.utc)
 uh = dt.hour
 report = {"stamp": dt.strftime("%Y%m%dT%H%M"), "t": src_t, "fileAgeMin": age_min, "staleFile": stale_file, "fileAt": t,
           "recorded": len(views), "increased": increased, "missing": missing, "rejected": rejected,
-          "nothingIncreased": bool(prev) and increased == 0}
-if views and not report["nothingIncreased"]:
+          "nothingIncreased": bool(prev) and increased == 0,
+          "rate": rate, "prevRate": prev_rate, "stalled": stalled}
+if views and not report["nothingIncreased"] and not stalled:
     doc = {"t": src_t, "source": "youtube-api" + ("" if stale_file else "-gha"), "keep": uh in (3, 9, 15, 21),
            "noon": uh == 3, "views": views}
+    if rate is not None:
+        doc["rate"] = rate
     json.dump(doc, open(out_p, "w", encoding="utf-8"), separators=(",", ":"))
     report["written"] = out_p
 print(json.dumps(report, ensure_ascii=False))
